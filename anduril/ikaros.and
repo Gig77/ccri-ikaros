@@ -24,7 +24,7 @@ geneGO            = INPUT(path="/opt/moksiskaan/pipeline/exec/output/geneGO_9606
 enrichmentTable   = INPUT(path="/opt/moksiskaan/pipeline/exec/output/GOEnrichment_9606.csv")                        // Moksiskaan specific a priori probabilities for the Gene ontology terms; comes with anduril-moksiskaan Docker image
 ensemblDb         = INPUT(path="/usr/local/share/anduril-bundles/moksiskaan/etc/ensemblHomoSapiens.properties")     // JDBC parameters for Ensembl~\cite{Flicek2008} database; comes with anduril-moksiskaan Docker image
 genesetAnnotation = INPUT(path="/mnt/projects/generic/data/ccri/geneset_annotation.tsv")                            // assigns gene sets to categories for filtering
-latexHeader       = INPUT(path="/mnt/projects/ikaros/anduril/latexHeader")
+latexHeader       = INPUT(path="/mnt/projects/ikaros/scripts/anduril/latexHeader")
 
 //------------------------------------------------------------------------------------------------
 //--- CONSTANTS
