@@ -6,7 +6,7 @@ authors = "Christian Frech and Marko Laakso"
 //--- INCLUDED REPORTS
 //------------------------------------------------------------------------------------------------
 
-runGSEA = true
+runGSEA = false
 runNetwork = true
 runPGE = true
 runFastQC = false
@@ -150,7 +150,7 @@ for comparison : std.itercsv(inputComparisons)
 //--- EXPERIMENTAL SETUP REPORT
 //------------------------------------------------------------------------------------------------
 
-include "/mnt/projects/iamp/scripts/anduril/experimentalSetup.and"
+include "/mnt/projects/ikaros/anduril/includes/experimentalSetup.and"
 
 experimentReport = experimentalSetupReport
 (
@@ -269,7 +269,7 @@ deseqExprMatrix = REvaluate
 //--- QUALITY CONTROL
 //------------------------------------------------------------------------------------------------
 
-include "/mnt/projects/iamp/scripts/anduril/qc.and"
+include "/mnt/projects/ikaros/anduril/includes/qc.and"
 
 qcReport  = getQCReport
 (
@@ -399,11 +399,11 @@ for ID, comparison : comparisons
 //--- DEG REPORTS
 //------------------------------------------------------------------------------------------------
 
-include "/mnt/projects/iamp/scripts/anduril/degTable.and"
-include "/mnt/projects/iamp/scripts/anduril/degBoxPlot.and"
-include "/mnt/projects/iamp/scripts/anduril/goClustering.and"
-include "/mnt/projects/iamp/scripts/anduril/goEnrichment.and"
-include "/mnt/projects/iamp/scripts/anduril/expressionHeatmap.and"
+include "/mnt/projects/ikaros/anduril/includes/degTable.and"
+include "/mnt/projects/ikaros/anduril/includes/degBoxPlot.and"
+include "/mnt/projects/ikaros/anduril/includes/goClustering.and"
+include "/mnt/projects/ikaros/anduril/includes/goEnrichment.and"
+include "/mnt/projects/ikaros/anduril/includes/expressionHeatmap.and"
 
 degReportLst = record()
 deseqColumnTypes = StringInput(content="Table\tColumn\tType\ntable1\tfc\tDOUBLE\ntable1\tstatus\tINTEGER\n")  // required if degTable is empty (= no significant DEGs)
@@ -619,7 +619,7 @@ for ID, comparison : comparisons
 //--- VENN DIAGRAM(S)
 //------------------------------------------------------------------------------------------------
 
-include "/mnt/projects/helena_veronika/scripts/anduril/venn.and"
+include "/mnt/projects/ikaros/anduril/includes/venn.and"
 
 vennReportLst = record()
 degSets = CSV2SetList(tables=degCalledLst)
@@ -793,7 +793,7 @@ boxplotSelectedGenes = LatexCombiner
 //--- POSITIONAL GENE ENRICHMENT
 //------------------------------------------------------------------------------------------------
 
-include "/mnt/projects/iamp/scripts/anduril/pgeReport.and"
+include "/mnt/projects/ikaros/anduril/includes/pgeReport.and"
 
 pgeReportLst = record()
 for comparison : std.itercsv(inputComparisons) {
@@ -874,7 +874,7 @@ OUTPUT(combinedPDF.document)
 //--- EXCEL FILES WITH DIFFERENTIALLY EXPRESSED GENES
 //------------------------------------------------------------------------------------------------
 
-include "/mnt/projects/iamp/scripts/anduril/degExcel.and"
+include "/mnt/projects/ikaros/anduril/includes/degExcel.and"
 
 degExcel = degExcelOutput
 (
@@ -896,7 +896,7 @@ OUTPUT(degExcel.allGenes)
 //------------------------------------------------------------------------------------------------
 //--- GENE SET ENRICHMENT ANALYSIS (GSEA)
 //------------------------------------------------------------------------------------------------
-include "/mnt/projects/sarah/scripts/anduril/gsea.and"
+include "/mnt/projects/ikaros/anduril/includes/gsea.and"
 
 // produce RNK files for each comparison
 
