@@ -7,9 +7,10 @@ authors = "Christian Frech and Marko Laakso"
 //------------------------------------------------------------------------------------------------
 
 runGSEA = false
-runNetwork = true
-runPGE = true
+runNetwork = false
+runPGE = false
 runFastQC = false
+runKegg = true
 
 //------------------------------------------------------------------------------------------------
 //--- INPUT DATA
@@ -285,7 +286,10 @@ qcReport  = getQCReport
     gcBiasYMax             = 4,
     batch1                 = "Xeno",
     covariate1             = "Group",
-    includeFastQC          = runFastQC
+    includeFastQC          = runFastQC,
+    sampleAnnotationColumns = "Xeno,Group,Cohort,Origin,Timepoint",
+    clusterHeatmapLegendXOffset = 0.02,
+    clusterHeatmapLegendYOffset = 0.22        
 )
 
 //------------------------------------------------------------------------------------------------
@@ -487,23 +491,15 @@ for ID, comparison : comparisons
 
 	//--- EXPRESSION HEATMAP --------------------------------------------------------------------------//
 
-	exprMatrixFiltered = CSVFilter
-	(
-		csv            = deseqExprMatrix.table,
-		auxiliary      = degCalledLst[ID] @require,
-		//includeColumns = comparison.sampleIdLst,    // uncomment to see only samples of the two compared groups
-		//includeColumns = "RowName",                 // uncomment to see only samples of the two compared groups
-		colOrder       = true,
-		@name          = "exprMatrix_" + std.quote(ID, type="Anduril")
-	)                      
-
 	exprHeatmap = getHeatmapReport
 	(
-		exprMatrix = exprMatrixFiltered,
-		geneNames = geneNames,
-		group = comparison,
-		sectionType="subsubsection",
-		@name = "heatmap" + std.quote(ID, type="Anduril")
+		force exprMatrix   = deseqExprMatrix.table,
+		degCalled    = degCalledLst[ID],
+		geneNames    = geneNames,
+		sampleGroups = sampleGroups,
+		comparison   = comparison,
+		sectionType  = "subsubsection",
+		@name        = "heatmap" + std.quote(ID, type="Anduril")
 	)
 
 	//--- GO ENRICHMENT -------------------------------------------------------------------------------//
@@ -519,6 +515,22 @@ for ID, comparison : comparisons
 		sectionTitle = "GO terms enriched in DEGs between " + comparison.caseG + " and " + comparison.controlG,
 		sectionType  = "subsubsection",
 		@name        = "goEnrichment" + std.quote(ID, type="Anduril")
+	)
+
+	//--- KEGG PATHWAYS -------------------------------------------------------------------------------//
+
+	include "/mnt/projects/ikaros/anduril/includes/keggReport.and"
+	kegg = keggReport
+	(
+		degsAll      = degAllLst[ID],
+		ID           = ID,
+		sectionTitle = "KEGG pathways enriched between " + comparison.caseG + " and " + comparison.controlG,
+		sectionType  = "subsubsection",
+		comparison   = comparison,
+		topNdiagrams = 10,
+		fdrCutoff    = 0.1,
+		@name        = "kegg" + std.quote(ID, type="Anduril"),
+		@enabled     = runKegg
 	)
 
 	//--- GENE INTERACTION NETWORK --------------------------------------------------------------------//
@@ -608,6 +620,7 @@ for ID, comparison : comparisons
 			degBoxplotDn, 
 			exprHeatmap, 
 			goEnrichment,
+			kegg,
 			network.report
 		},
 		sectionTitle=ID, 
@@ -909,7 +922,7 @@ for ID, comparison : comparisons
 		annotation = geneNames,
 		colP       = "p" + ID,
 		colFC      = "fc" + ID,
-		rankBy     = "pi",
+		rankBy     = "p",
 		@name      = "rnk_" + std.quote(ID, type="Anduril"),
 		@enabled   = runGSEA
 	)
