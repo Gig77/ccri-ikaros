@@ -522,7 +522,9 @@ for ID, comparison : comparisons
 	include "/mnt/projects/ikaros/anduril/includes/keggReport.and"
 	kegg = keggReport
 	(
+		degsCalled   = degCalledLst[ID],
 		degsAll      = degAllLst[ID],
+		geneNames    = geneNames,
 		ID           = ID,
 		sectionTitle = "KEGG pathways enriched between " + comparison.caseG + " and " + comparison.controlG,
 		sectionType  = "subsubsection",
