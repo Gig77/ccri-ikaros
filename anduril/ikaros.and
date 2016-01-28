@@ -6,9 +6,9 @@ authors = "Christian Frech and Marko Laakso"
 //--- INCLUDED REPORTS
 //------------------------------------------------------------------------------------------------
 
-runGSEA = false
-runNetwork = false
-runPGE = false
+runGSEA = true
+runNetwork = true
+runPGE = true
 runFastQC = false
 runKegg = true
 
@@ -636,55 +636,19 @@ for ID, comparison : comparisons
 
 include "/mnt/projects/ikaros/anduril/includes/venn.and"
 
+overlapReport = OverlapReport
+(
+	degsCalled   = degCalledLst,
+	degsAll      = degAllLst,
+	overlaps     = record(IKN_IKD=record(comparisons={"IKN.vs.IKC", "IKD.vs.IKC"}, sets={"IKN.vs.IKC_AND_NOT_IKD.vs.IKC", "IKN.vs.IKC_AND_IKD.vs.IKC"})),
+	geneAnnot    = geneAnnot,
+	sectionTitle = "Gene set overlaps",
+	sectionType  = "section",
+	@enabled     = false
+)
+
+degSets = CSV2SetList(tables = degCalledLst)
 vennReportLst = record()
-degSets = CSV2SetList(tables=degCalledLst)
-
-// ---  IKN.vs.IKC and IKD.vs.IKC
-//-----------------------------------
-
-venn_IKNvsIKC_IKDvsIKC = VennDiagram
-(
-	sets         = degSets,
-	cexSetName   = 0.3,
-	cexSetSize   = 0.3,
-	doWeights    = true,
-	sets1        = "IKN.vs.IKC,IKD.vs.IKC",
-	sectionTitle = "IKN.vs.IKC vs. IKD.vs.IKC",
-	sectionType  = "subsubsection",
-	types        = "circles"
-)
-vennReportLst["venn_IKNvsIKC_IKDvsIKC"] = venn_IKNvsIKC_IKDvsIKC.report
-
-vennExpanded_IKNvsIKC_IKDvsIKC = ExpandCollapse(relation=venn_IKNvsIKC_IKDvsIKC.sets)
-
-vennSetTableReport_IKNvsIKC_AND_NOT_IKDvsIKC = VennSetTableReport
-(
-	vennSetData        = vennExpanded_IKNvsIKC_IKDvsIKC,
-	vennSetNames       = {"IKN.vs.IKC_AND_NOT_IKD.vs.IKC"},
-	outputComparisons  = {"IKN.vs.IKC", "IKD.vs.IKC"},
-	degs               = degAllLst,
-	geneAnnot          = geneAnnot,
-	section            = "IKN.vs.IKC but NOT IKD.vs.IKC",
-	sectionType        = "subsubsection",
-	orderBy            = "IKN.vs.IKC",
-	caption            = "These genes were found to be significantly differentially expressed in comparison " + comparisons["IKN.vs.IKC"].desc + " (set 'A') but NOT in comparison " + comparisons["IKD.vs.IKC"].desc + " (set 'B'). " +
-	                     "Genes sorted by column 'FC(A)'."
-)
-vennReportLst["vennSetTableReport_IKNvsIKC_AND_NOT_IKDvsIKC"] = vennSetTableReport_IKNvsIKC_AND_NOT_IKDvsIKC.report
-
-vennSetTableReport_IKNvsIKC_AND_IKDvsIKC = VennSetTableReport
-(
-	vennSetData        = vennExpanded_IKNvsIKC_IKDvsIKC,
-	vennSetNames       = {"IKN.vs.IKC_AND_IKD.vs.IKC"},
-	outputComparisons  = {"IKN.vs.IKC", "IKD.vs.IKC"},
-	degs               = degAllLst,
-	geneAnnot          = geneAnnot,
-	section            = "Intersection IKN.vs.IKC and IKD.vs.IKC",
-	sectionType        = "subsubsection",
-	caption            = "These genes were found to be significantly differentially expressed in both " + comparisons["IKN.vs.IKC"].desc + " (set 'A') and " + comparisons["IKD.vs.IKC"].desc + " (set 'B'). " +
-	                     "Genes sorted by average FC from largest to smallest."
-)
-vennReportLst["vennSetTableReport_IKNvsIKC_AND_IKDvsIKC"] = vennSetTableReport_IKNvsIKC_AND_IKDvsIKC.report
 
 // ---  IKNp.vs.IKCp and IKD.vs.IKCp
 //-----------------------------------
@@ -736,6 +700,7 @@ vennReportLst["vennSetTableReport_IKNpvsIKCp_AND_IKDvsIKCp"] = vennSetTableRepor
 // ---  IKNp.vs.IKCp and IKNx.vs.IKCx
 //-----------------------------------
 
+
 venn_IKNpvsIKCp_IKNxvsIKCx = VennDiagram
 (
 	sets         = degSets,
@@ -782,13 +747,13 @@ boxplotCustom = ExpressionBoxPlot
 (
 	force expr   = deseqExprMatrix.table,
 	force sampleGroups = sampleGroups,
-	includeGroups="IK6,IKD,IKC",
+	includeGroups="IKNp,IKD,IKCp,IKNx,IKCx",
 	annotation = geneAnnot,
-	hgnc = "IKZF1,PTK2,PTK2B",
+	hgnc = "IKZF1,PTK2,PTK2B,IGLL1,IGLL5,VPREB1,VPREB3",
 	nRow = 1,
-	nCol = 5,
+	nCol = 7,
 	height=4,
-	labelOutliers=false,
+	labelOutliers=true,
 	cexSampleLabel=0.3,
 	cexGroupLabel=0.7,
 	caption = 'Expression values of selected genes.',
@@ -869,6 +834,7 @@ combinedReport = LatexCombiner
 		degReport,
 		boxplotSelectedGenes,
 		pgeReport,
+		overlapReport,
 		rConfig.report
 	}
 )
@@ -930,6 +896,22 @@ for ID, comparison : comparisons
 	)
 }
 
+//rnksUnidirectional = record()
+//for ID, comparison : comparisons 
+//{	
+//	rnksUnidirectional[ID] = DEG2Rnk
+//	(
+//		deg             = degAllLst[ID],
+//		annotation      = geneNames,
+//		colP            = "p" + ID,
+//		colFC           = "fc" + ID,
+//		rankBy          = "p",
+//		ignoreDirection = true,
+//		@name           = "rnkUnidirectional_" + std.quote(ID, type="Anduril"),
+//		@enabled        = runGSEA
+//	)
+//}
+
 // run GSEA for each comparison and database
 
 enrichedUp = record()
@@ -971,6 +953,32 @@ for ID, comparison : comparisons
 	)
 	enrichedUp[category][ID] = gseaMSigDB.enrichedUp
 	enrichedDn[category][ID] = gseaMSigDB.enrichedDown
+}
+
+// IKAROS gene sets
+
+category = "IKAROS"	
+enrichedUp[category] = record() 
+enrichedDn[category] = record() 
+minSetSize[category] = 5
+maxSetSize[category] = 5000
+
+for ID, comparison : comparisons 
+{	
+	gseaIKAROS = GSEA
+	(
+		rnk = rnks[ID],
+		annotations = genesetAnnotation,
+		label = ID,
+		gmt   = "/mnt/projects/ikaros/data/ikaros_curated_genesets_gsea.gmt", 
+		options = "-nperm " + permutations + " -set_max " + maxSetSize[category] + " -set_min " + minSetSize[category],
+		@memory  = 7000,
+		@cpu     = 2, 			
+		@name = "gseaIKAROS_" + std.quote(ID, type="Anduril"),
+		@enabled = runGSEA
+	)
+	enrichedUp[category][ID] = gseaIKAROS.enrichedUp
+	enrichedDn[category][ID] = gseaIKAROS.enrichedDown
 }
 
 // GeneSigDB
@@ -1073,6 +1081,7 @@ gseaReport = GSEAReport
 	hsigCutoffCustom = 0.01,
 	overlapSigCutoff = 0.05,
 	overlapHSigCutoff = 0.001,
+	runOverlapReport = runGSEA,
 	@enabled = runGSEA
 )
 
