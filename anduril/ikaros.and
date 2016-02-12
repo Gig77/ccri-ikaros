@@ -499,6 +499,7 @@ for ID, comparison : comparisons
 		sampleGroups = sampleGroups,
 		comparison   = comparison,
 		sectionType  = "subsubsection",
+		fontSizeCol  = 8,
 		@name        = "heatmap" + std.quote(ID, type="Anduril")
 	)
 

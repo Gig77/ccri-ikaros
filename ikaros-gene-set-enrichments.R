@@ -32,7 +32,7 @@ result[["IKNp.vs.IKCp"]] <- enricher(
 )@result
 
 rownames(result[["IKNp.vs.IKCp"]]) <- NULL ; colnames(result[["IKNp.vs.IKCp"]])[1] <- "GeneSet"
-result[["IKNp.vs.IKCp"]] <- cbind(data.frame(comparison="IKNp.vs.IKCp", cutoff="q <= 1e-4, abs(FC) >= 0.8"), result[["IKNp.vs.IKCp"]])
+result[["IKNp.vs.IKCp"]] <- cbind(data.frame(comparison="IKNp.vs.IKCp"), result[["IKNp.vs.IKCp"]])
 
 # IKMp.vs.IKCp
 
@@ -53,7 +53,7 @@ result[["IKMp.vs.IKCp"]] <- enricher(
 )@result
 
 rownames(result[["IKMp.vs.IKCp"]]) <- NULL ; colnames(result[["IKMp.vs.IKCp"]])[1] <- "GeneSet"
-result[["IKMp.vs.IKCp"]] <- cbind(data.frame(comparison="IKMp.vs.IKCp", cutoff="q <= 1e-2, abs(FC) >= 0.8"), result[["IKMp.vs.IKCp"]])
+result[["IKMp.vs.IKCp"]] <- cbind(data.frame(comparison="IKMp.vs.IKCp"), result[["IKMp.vs.IKCp"]])
 
 # IKD.vs.IKCp
 
@@ -73,7 +73,27 @@ result[["IKD.vs.IKCp"]] <- enricher(
   TERM2NAME     = gmt[,c(1,3)]
 )@result
 rownames(result[["IKD.vs.IKCp"]]) <- NULL ; colnames(result[["IKD.vs.IKCp"]])[1] <- "GeneSet"
-result[["IKD.vs.IKCp"]] <- cbind(data.frame(comparison="IKD.vs.IKCp", cutoff="p <= 0.005, abs(FC) >= 0.8"), result[["IKD.vs.IKCp"]])
+result[["IKD.vs.IKCp"]] <- cbind(data.frame(comparison="IKD.vs.IKCp"), result[["IKD.vs.IKCp"]])
+
+# IKDclean.vs.IKCp
+
+m <- read.delim("/mnt/projects/ikaros/results/anduril/execute/deseqAnnotated_IKDclean_vs_IKCp/table.csv", stringsAsFactors = F, row.names = 1)
+expressed <- unique(m$Gene[m$meanA >= min.expr | m$meanB >= min.expr])
+deg <- read.delim("/mnt/projects/ikaros/results/anduril/execute/degCalled_IKDclean_vs_IKCp/table.csv", stringsAsFactors = F, row.names = 1)
+IKDclean.vs.IKCp <- unique(deg$Gene[!is.na(deg$Gene)])
+
+result[["IKDclean.vs.IKCp"]] <- enricher(
+  gene          = IKDclean.vs.IKCp, 
+  pvalueCutoff  = 1, 
+  pAdjustMethod = "BH", 
+  universe      = expressed, 
+  minGSSize     = 5, 
+  qvalueCutoff  = 1, 
+  TERM2GENE     = rbind(term2gene, data.frame(term="expressed", gene=expressed)), 
+  TERM2NAME     = gmt[,c(1,3)]
+)@result
+rownames(result[["IKDclean.vs.IKCp"]]) <- NULL ; colnames(result[["IKDclean.vs.IKCp"]])[1] <- "GeneSet"
+result[["IKDclean.vs.IKCp"]] <- cbind(data.frame(comparison="IKDclean.vs.IKCp"), result[["IKDclean.vs.IKCp"]])
 
 # write results
 
