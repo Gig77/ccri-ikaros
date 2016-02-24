@@ -120,13 +120,20 @@ for comparison : std.itercsv(inputComparisons)
 		std.fail("Too many groups listed for ", comparison.ID, " (", comparison.Description, "). Members = ", comparison.Members, sep='')
 	}
 
+	regexp = "ID=(" + gCase + "|" + gControl
+	for g : std.split(comparison.NonMembers, ',')
+	{
+		regexp = regexp + "|" + g
+	}
+	regexp = regexp + ")"
+	
 	sampleIdLst = CSV2IDList
 	(
 		table1    = sampleGroups @require,
 		columnIn  = "Members",
 		columnOut = "Sample",
 		isList    = true,
-		regexp1   = "ID=(" + gCase + "|" + gControl + ")",
+		regexp1   = regexp,
 		@name     = "sampleIds_" + std.quote(comparison.ID, type="Anduril")
 	)
 
@@ -233,6 +240,7 @@ edaseq = EDASeq
 	method = "full"
 )
 
+// we can't use DESeqExpr at the moment because it does not accept expression matrix as input
 deseqExprMatrix = REvaluate
 (
 	table1 = edaseq.normalizedCountsWithinLane,
@@ -260,7 +268,7 @@ deseqExprMatrix = REvaluate
 
 //deseqExprMatrix = DESeqExpr
 //(
-//	geneCounts  = bamCounts,
+//	geneCounts  = edaseq.normalizedCountsBetweenLane,
 //    counts      = false,
 //    maxNA       = 0.9,
 //    normalized  = true
@@ -440,6 +448,7 @@ for ID, comparison : comparisons
 		direction = "up",
 		comparison = comparison,
 		ID=ID,
+		design = comparison.design,
 		section="Genes with higher expression in "+comparison.caseG+" than "+comparison.controlG+" samples",
 		sectionType="subsubsection",
 		@name = "degTableUp_" + std.quote(ID, type="Anduril")
@@ -452,6 +461,7 @@ for ID, comparison : comparisons
 		direction = "down",
 		comparison = comparison,
 		ID=ID,
+		design = comparison.design,
 		section="Genes with lower expression in "+comparison.caseG+" than "+comparison.controlG+" samples",
 		sectionType="subsubsection",
 		@name = "degTableDn_" + std.quote(ID, type="Anduril")
@@ -493,14 +503,17 @@ for ID, comparison : comparisons
 
 	exprHeatmap = getHeatmapReport
 	(
-		force exprMatrix   = deseqExprMatrix.table,
-		degCalled    = degCalledLst[ID],
-		geneNames    = geneNames,
-		sampleGroups = sampleGroups,
-		comparison   = comparison,
-		sectionType  = "subsubsection",
-		fontSizeCol  = 8,
-		@name        = "heatmap" + std.quote(ID, type="Anduril")
+		force exprMatrix      = deseqExprMatrix.table,
+		degCalled             = degCalledLst[ID],
+		geneNames             = geneNames,
+		samples               = inputSamples,
+		sampleGroups          = sampleGroups,
+		comparison            = comparison,
+		includeOutgroup       = false,
+//		sampleAnnotationNames = "Origin",
+		fontSizeCol           = 8,
+		sectionType           = "subsubsection",
+		@name                 = "heatmap" + std.quote(ID, type="Anduril")
 	)
 
 	//--- GO ENRICHMENT -------------------------------------------------------------------------------//
