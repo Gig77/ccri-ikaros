@@ -11,6 +11,7 @@ runNetwork = true
 runPGE = true
 runFastQC = false
 runKegg = true
+runMutations = true
 
 //------------------------------------------------------------------------------------------------
 //--- INPUT DATA
@@ -26,6 +27,8 @@ enrichmentTable   = INPUT(path="/opt/moksiskaan/pipeline/exec/output/GOEnrichmen
 ensemblDb         = INPUT(path="/usr/local/share/anduril-bundles/moksiskaan/etc/ensemblHomoSapiens.properties")     // JDBC parameters for Ensembl~\cite{Flicek2008} database; comes with anduril-moksiskaan Docker image
 genesetAnnotation = INPUT(path="/mnt/projects/generic/data/ccri/geneset_annotation.tsv")                            // assigns gene sets to categories for filtering
 latexHeader       = INPUT(path="/mnt/projects/ikaros/scripts/anduril/latexHeader")
+latexHeaderMutation  = INPUT(path="/mnt/projects/ikaros/scripts/anduril/latexHeaderMutation")
+referenceGenomeFasta = INPUT(path="/data_synology/anduril/docker-images/anduril-gsnap_2014_12_28-human_g1k_v37/db/human_g1k_v37/human_g1k_v37_etv6runx1.fasta") 
 
 //------------------------------------------------------------------------------------------------
 //--- CONSTANTS
@@ -46,6 +49,20 @@ hyperlinkRuleEnsemblGeneCards = StringInput(content=
 
 moksiskaanInit = MoksiskaanInit(showLog='EnsemblImport,PathwayCommonsImport,PINAImport,WikiPathways')
 ensemblRef = XrefLinkRule(moksiskaan = moksiskaanInit.connection, columns = "Ensembl=Ensembl", xrefTypes  = XrefType_Ensembl_gene)
+
+rConfig = RConfigurationReport(packages = "base,csbl.go,DESeq2,igraph", sectionType = "section")
+bibtexMoksiskaan = INPUT(path="/usr/local/share/anduril-bundles/moksiskaan/components/report-BibTeX/moksiskaan.bib")
+bibtexSequencing = INPUT(path="/usr/local/share/anduril-bundles/sequencing/components/report-BibTeX/sequencing.bib")
+
+docTemplate = LatexTemplate
+(
+	authors  = std.quote(authors, type="LaTeX"),
+	bibtex1  = rConfig.citations,
+	bibtex2  = bibtexMoksiskaan,
+	bibtex3  = bibtexSequencing,
+	title    = std.quote(title, type="LaTeX") + " Main Report",
+	printTOC = true
+)
 
 @out.optOut1.filename = "Homo_sapiens.GRCh37.75.etv6runx1.runx1ex1.norRNA.gtf"
 gtfNorRNA = BashEvaluate
@@ -299,6 +316,33 @@ qcReport  = getQCReport
     clusterHeatmapLegendXOffset = 0.02,
     clusterHeatmapLegendYOffset = 0.22        
 )
+
+//------------------------------------------------------------------------------------------------
+//--- MUTATION REPORT
+//------------------------------------------------------------------------------------------------
+
+include "/mnt/projects/ikaros/anduril/includes/mutations.and"
+
+mutationReport = MutationReport
+(
+	alignedBams  = alignedBams,
+	sectionTitle = "Mutated genes",
+	sectionType  = "section",
+	@enabled     = runMutations
+)
+
+mutationPDF = LatexPDF
+(
+	document = mutationReport,
+	header   = latexHeaderMutation,
+	footer   = docTemplate.footer,
+	useRefs  = true,
+	verbose  = false,
+	@enabled = runMutations
+)
+
+@out.out.filename = shortName + "-mutations.pdf"
+OUTPUT(mutationPDF.document)
 
 //------------------------------------------------------------------------------------------------
 //--- DIFFERENTIAL GENE EXPRESSION ANALYSIS
@@ -763,8 +807,8 @@ boxplotCustom = ExpressionBoxPlot
 	force sampleGroups = sampleGroups,
 	includeGroups="IKNp,IKD,IKCp,IKNx,IKCx",
 	annotation = geneAnnot,
-	hgnc = "IKZF1,PTK2,PTK2B,IGLL1,IGLL5,VPREB1,VPREB3",
-	nRow = 1,
+	hgnc = "IKZF1,PTK2,PTK2B,IGLL1,IGLL5,VPREB1,VPREB3,CRLF2",
+	nRow = 2,
 	nCol = 7,
 	height=4,
 	labelOutliers=true,
@@ -817,20 +861,6 @@ pgeReport = LatexCombiner
 //------------------------------------------------------------------------------------------------
 //--- COMBINED REPORT
 //------------------------------------------------------------------------------------------------
-
-rConfig = RConfigurationReport(packages = "base,csbl.go,DESeq2,igraph", sectionType = "section")
-bibtexMoksiskaan = INPUT(path="/usr/local/share/anduril-bundles/moksiskaan/components/report-BibTeX/moksiskaan.bib")
-bibtexSequencing = INPUT(path="/usr/local/share/anduril-bundles/sequencing/components/report-BibTeX/sequencing.bib")
-
-docTemplate = LatexTemplate
-(
-	authors  = std.quote(authors, type="LaTeX"),
-	bibtex1  = rConfig.citations,
-	bibtex2  = bibtexMoksiskaan,
-	bibtex3  = bibtexSequencing,
-	title    = std.quote(title, type="LaTeX") + " Main Report",
-	printTOC = true
-)
 
 degReport = LatexCombiner
 (
