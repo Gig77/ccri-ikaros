@@ -32,6 +32,8 @@ pdf("/mnt/projects/ikaros/results/correlation-discovery-vs-validation.pdf")
 plotCorrelation(merged, "Top-50 up- and downregulated genes\n from discovery cohort (IKNp vs. IKCp)")
 dev.off()
 
+write.table(merged, "/mnt/projects/ikaros/results/correlation-discovery-vs-validation.top100-genes.tsv", col.names = T, row.names = F, quote = F, sep = "\t")
+
 #-------------------
 # PID FAK Pathway
 #-------------------
